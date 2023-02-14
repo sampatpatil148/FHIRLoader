@@ -1,0 +1,30 @@
+jobs:
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: clone synthea
+        run: git clone https://github.com/synthetichealth/synthea.git
+
+      - name: run synthea 
+        run: |
+          cd synthea
+          ./run_synthea -p 2
+          ls -la output/fhir
+      - uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: '3.1.x'
+      - name: load data 
+        run: |
+          pwd
+          git clone https://github.com/hansenms/FhirLoader.git
+          ls -la 
+          cd FhirLoader
+          dotnet run -- \
+              --client-secret ${{ Secrets.CLIENTSECRET}} \
+              --client-id ${{Secrets.CLIENTID}} \
+              --input-folder ../synthea/output/fhir/ \
+              --authority ${{ Secrets.AUTHORITY}} \
+              --fhir-server-url ${{ Secrets.FHIRAZUREAPI}}    \
+              --max-degree-of-parallelism 14
